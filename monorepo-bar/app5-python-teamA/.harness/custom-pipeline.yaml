@@ -1,0 +1,98 @@
+pipeline:
+  name: app5-python-teamA-custom
+  identifier: app5_python_teamA_custom
+  projectIdentifier: monorepo_bar
+  orgIdentifier: default
+  tags:
+    team: TeamA
+    language: python
+    resource_profile: small
+    pipeline_type: custom
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.Github
+        repoName: monorepo
+        build: <+input>
+  stages:
+    - stage:
+        name: Custom Build
+        identifier: Custom_Build
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Setup Python Environment
+                  identifier: setup_python
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app5-python-teamA
+                      python --version
+                      pip install --upgrade pip
+                  resources:
+                    limits:
+                      memory: 256Mi
+                      cpu: "250m"
+              - step:
+                  type: Run
+                  name: Install Dependencies
+                  identifier: install_deps
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app5-python-teamA
+                      pip install -r requirements.txt
+                  resources:
+                    limits:
+                      memory: 512Mi
+                      cpu: "500m"
+              - step:
+                  type: Run
+                  name: Lint Check
+                  identifier: lint_check
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app5-python-teamA
+                      pip install pylint
+                      pylint app.py --disable=C,R,W || true
+                  resources:
+                    limits:
+                      memory: 256Mi
+                      cpu: "250m"
+              - step:
+                  type: Run
+                  name: Run Unit Tests
+                  identifier: run_tests
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app5-python-teamA
+                      pytest --cov=. --cov-report=xml --cov-report=term --junitxml=test-results.xml
+                  resources:
+                    limits:
+                      memory: 512Mi
+                      cpu: "500m"
+              - step:
+                  type: Run
+                  name: Generate Coverage Report
+                  identifier: coverage_report
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app5-python-teamA
+                      coverage report --fail-under=70
+                  resources:
+                    limits:
+                      memory: 256Mi
+                      cpu: "250m"

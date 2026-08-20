@@ -1,0 +1,98 @@
+pipeline:
+  name: app6-java-teamB-custom
+  identifier: app6_java_teamB_custom
+  projectIdentifier: monorepo_bar
+  orgIdentifier: default
+  tags:
+    team: TeamB
+    language: java
+    resource_profile: small
+    pipeline_type: custom
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.Github
+        repoName: monorepo
+        build: <+input>
+  stages:
+    - stage:
+        name: Custom Build and Test
+        identifier: Custom_Build_Test
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Validate Maven Setup
+                  identifier: validate_maven
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app6-java-teamB
+                      mvn --version
+                      java --version
+                  resources:
+                    limits:
+                      memory: 256Mi
+                      cpu: "250m"
+              - step:
+                  type: Run
+                  name: Compile Source
+                  identifier: compile
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app6-java-teamB
+                      mvn clean compile
+                  resources:
+                    limits:
+                      memory: 512Mi
+                      cpu: "500m"
+              - step:
+                  type: Run
+                  name: Run Unit Tests
+                  identifier: unit_tests
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app6-java-teamB
+                      mvn test
+                  resources:
+                    limits:
+                      memory: 512Mi
+                      cpu: "500m"
+              - step:
+                  type: Run
+                  name: Generate Code Coverage
+                  identifier: code_coverage
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app6-java-teamB
+                      mvn jacoco:report
+                      mvn jacoco:check -Drule.coverage.minimum=0.60
+                  resources:
+                    limits:
+                      memory: 512Mi
+                      cpu: "500m"
+              - step:
+                  type: Run
+                  name: Package Application
+                  identifier: package
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app6-java-teamB
+                      mvn package -DskipTests
+                  resources:
+                    limits:
+                      memory: 512Mi
+                      cpu: "500m"

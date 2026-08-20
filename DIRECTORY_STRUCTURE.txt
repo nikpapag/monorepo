@@ -1,0 +1,155 @@
+Monorepo Demo - Complete Directory Structure
+=============================================
+
+.
+├── ROOT-README.md                    # Main overview documentation
+├── SETUP-COMPLETE.md                 # Setup completion summary
+├── DIRECTORY_STRUCTURE.txt           # This file
+│
+├── monorepo-foo/                     # GUILD RECOMMENDED PIPELINES
+│   ├── README.md                     # Monorepo Foo documentation
+│   ├── ARCHITECTURE.md               # Architecture overview
+│   ├── .gitignore                    # Git ignore rules
+│   ├── .harness/
+│   │   └── monorepo-pipeline.yaml   # Aggregate pipeline (all apps)
+│   │
+│   ├── app1-python-teamA/           # PYTHON - TEAMA - LARGE (L)
+│   │   ├── README.md
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   ├── pytest.ini
+│   │   ├── app.py                   # Flask ML service
+│   │   ├── test_app.py              # Unit tests
+│   │   ├── .harness/
+│   │   │   └── pipeline.yaml        # Guild Python pipeline
+│   │   └── k8s/
+│   │       └── deployment.yaml      # K8s manifest (CPU: 1-2 cores, Mem: 2-4GB)
+│   │
+│   ├── app2-java-teamB/             # JAVA - TEAMB - SMALL (S)
+│   │   ├── README.md
+│   │   ├── Dockerfile
+│   │   ├── pom.xml
+│   │   ├── src/
+│   │   │   ├── main/java/com/teamb/app2/
+│   │   │   │   ├── Application.java
+│   │   │   │   ├── controller/ServiceController.java
+│   │   │   │   └── model/*.java
+│   │   │   ├── test/java/com/teamb/app2/
+│   │   │   │   └── controller/ServiceControllerTest.java
+│   │   │   └── resources/
+│   │   │       └── application.properties
+│   │   ├── .harness/
+│   │   │   └── pipeline.yaml        # Guild Java pipeline
+│   │   └── k8s/
+│   │       └── deployment.yaml      # K8s manifest (CPU: 250-500m, Mem: 256-512Mi)
+│   │
+│   ├── app3-java-teamB/             # JAVA - TEAMB - SMALL (S)
+│   │   ├── README.md
+│   │   ├── Dockerfile
+│   │   ├── pom.xml
+│   │   ├── src/
+│   │   │   ├── main/java/com/teamb/app3/
+│   │   │   │   ├── Application.java
+│   │   │   │   ├── controller/UserController.java
+│   │   │   │   ├── model/User.java
+│   │   │   │   └── service/UserService.java
+│   │   │   ├── test/java/com/teamb/app3/
+│   │   │   │   └── controller/UserControllerTest.java
+│   │   │   └── resources/
+│   │   │       └── application.properties
+│   │   ├── .harness/
+│   │   │   └── pipeline.yaml        # Guild Java pipeline
+│   │   └── k8s/
+│   │       └── deployment.yaml      # K8s manifest (CPU: 250-500m, Mem: 256-512Mi)
+│   │
+│   └── app4-python-teamB/           # PYTHON - TEAMB - LARGE (L)
+│       ├── README.md
+│       ├── Dockerfile
+│       ├── requirements.txt
+│       ├── pytest.ini
+│       ├── app.py                   # Flask batch processor
+│       ├── test_app.py              # Unit tests
+│       ├── .harness/
+│       │   └── pipeline.yaml        # Guild Python pipeline
+│       └── k8s/
+│           └── deployment.yaml      # K8s manifest (CPU: 1.5-3 cores, Mem: 2-4GB)
+│
+└── monorepo-bar/                    # CUSTOM PIPELINES
+    ├── README.md                    # Monorepo Bar documentation
+    ├── ARCHITECTURE.md              # Architecture overview
+    ├── .gitignore                   # Git ignore rules
+    ├── .harness/
+    │   └── monorepo-pipeline.yaml   # Aggregate custom pipeline (all apps)
+    │
+    ├── app5-python-teamA/          # PYTHON - TEAMA - SMALL (S)
+    │   ├── README.md
+    │   ├── Dockerfile
+    │   ├── requirements.txt
+    │   ├── pytest.ini
+    │   ├── app.py                  # Flask API service
+    │   ├── test_app.py             # Unit tests
+    │   ├── .harness/
+    │   │   └── custom-pipeline.yaml # Custom Python pipeline (70% coverage)
+    │   └── k8s/
+    │       └── deployment.yaml     # K8s manifest (CPU: 250-500m, Mem: 256-512Mi)
+    │
+    ├── app6-java-teamB/            # JAVA - TEAMB - SMALL (S)
+    │   ├── README.md
+    │   ├── Dockerfile
+    │   ├── pom.xml
+    │   ├── src/
+    │   │   ├── main/java/com/teamb/app6/
+    │   │   │   ├── Application.java
+    │   │   │   ├── controller/ProductController.java
+    │   │   │   ├── model/Product.java
+    │   │   │   └── service/ProductService.java
+    │   │   ├── test/java/com/teamb/app6/
+    │   │   │   └── controller/ProductControllerTest.java
+    │   │   └── resources/
+    │   │       └── application.properties
+    │   ├── .harness/
+    │   │   └── custom-pipeline.yaml # Custom Java pipeline (60% coverage)
+    │   └── k8s/
+    │       └── deployment.yaml     # K8s manifest (CPU: 250-500m, Mem: 256-512Mi)
+    │
+    └── app7-java-teamA/            # JAVA - TEAMA - LARGE (L)
+        ├── README.md
+        ├── Dockerfile
+        ├── pom.xml
+        ├── src/
+        │   ├── main/java/com/teama/app7/
+        │   │   ├── Application.java
+        │   │   ├── controller/AnalyticsController.java
+        │   │   ├── model/*.java
+        │   │   └── service/AnalyticsService.java
+        │   ├── test/java/com/teama/app7/
+        │   │   └── controller/AnalyticsControllerTest.java
+        │   └── resources/
+        │       └── application.properties
+        ├── .harness/
+        │   └── custom-pipeline.yaml # Custom Java pipeline (65% coverage, perf tests)
+        └── k8s/
+            └── deployment.yaml     # K8s manifest (CPU: 1-2 cores, Mem: 1-2GB)
+
+
+SUMMARY
+=======
+Total Applications: 7
+  - Monorepo Foo: 4 apps (Guild-recommended pipelines)
+  - Monorepo Bar: 3 apps (Custom pipelines)
+
+Teams:
+  - TeamA: 3 apps (app1, app5, app7)
+  - TeamB: 4 apps (app2, app3, app4, app6)
+
+Languages:
+  - Python: 3 apps (app1, app4, app5)
+  - Java: 4 apps (app2, app3, app6, app7)
+
+Resource Profiles:
+  - Large (L): 3 apps (app1, app4, app7) - Resource intensive
+  - Small (S): 4 apps (app2, app3, app5, app6) - Lightweight
+
+Pipeline Types:
+  - Guild-recommended: 4 apps (Python × 2, Java × 2)
+  - Custom: 3 apps (Python × 1, Java × 2)

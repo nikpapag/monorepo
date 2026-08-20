@@ -1,0 +1,69 @@
+pipeline:
+  name: app2-java-teamB
+  identifier: app2_java_teamB
+  projectIdentifier: monorepo_foo
+  orgIdentifier: default
+  tags:
+    team: TeamB
+    language: java
+    resource_profile: small
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.Github
+        repoName: monorepo
+        build: <+input>
+  stages:
+    - stage:
+        name: Build and Test
+        identifier: Build_and_Test
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Maven Build
+                  identifier: maven_build
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-foo/app2-java-teamB
+                      mvn clean compile
+                  resources:
+                    limits:
+                      memory: 512Mi
+                      cpu: "500m"
+              - step:
+                  type: Run
+                  name: Maven Test
+                  identifier: maven_test
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-foo/app2-java-teamB
+                      mvn test jacoco:report
+                  resources:
+                    limits:
+                      memory: 512Mi
+                      cpu: "500m"
+              - step:
+                  type: Run
+                  name: Package
+                  identifier: package
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-foo/app2-java-teamB
+                      mvn package -DskipTests
+                  resources:
+                    limits:
+                      memory: 512Mi
+                      cpu: "500m"

@@ -1,0 +1,75 @@
+pipeline:
+  name: app1-python-teamA
+  identifier: app1_python_teamA
+  projectIdentifier: monorepo_foo
+  orgIdentifier: default
+  tags:
+    team: TeamA
+    language: python
+    resource_profile: large
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.Github
+        repoName: monorepo
+        build: <+input>
+  stages:
+    - stage:
+        name: Build and Test
+        identifier: Build_and_Test
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Install Dependencies
+                  identifier: install_deps
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-foo/app1-python-teamA
+                      pip install -r requirements.txt
+                  resources:
+                    limits:
+                      memory: 2Gi
+                      cpu: "1000m"
+              - step:
+                  type: Run
+                  name: Run Tests
+                  identifier: run_tests
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-foo/app1-python-teamA
+                      pytest --cov=. --cov-report=xml --cov-report=term
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths:
+                          - monorepo-foo/app1-python-teamA/coverage.xml
+                  resources:
+                    limits:
+                      memory: 4Gi
+                      cpu: "2000m"
+              - step:
+                  type: Run
+                  name: Code Coverage
+                  identifier: code_coverage
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-foo/app1-python-teamA
+                      coverage report
+                      coverage html
+                  resources:
+                    limits:
+                      memory: 1Gi
+                      cpu: "500m"

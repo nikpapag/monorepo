@@ -1,0 +1,102 @@
+pipeline:
+  name: monorepo-foo-all-apps
+  identifier: monorepo_foo_all_apps
+  projectIdentifier: monorepo_foo
+  orgIdentifier: default
+  tags:
+    monorepo: foo
+    pipeline_type: guild_recommended
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.Github
+        repoName: monorepo
+        build: <+input>
+  stages:
+    - parallel:
+        - stage:
+            name: App1 Python TeamA
+            identifier: app1_python_teamA
+            type: CI
+            spec:
+              cloneCodebase: true
+              execution:
+                steps:
+                  - step:
+                      type: Run
+                      name: Build and Test App1
+                      identifier: build_test_app1
+                      spec:
+                        shell: Sh
+                        command: |
+                          cd monorepo-foo/app1-python-teamA
+                          pip install -r requirements.txt
+                          pytest --cov=. --cov-report=xml
+                      resources:
+                        limits:
+                          memory: 4Gi
+                          cpu: "2000m"
+        - stage:
+            name: App2 Java TeamB
+            identifier: app2_java_teamB
+            type: CI
+            spec:
+              cloneCodebase: true
+              execution:
+                steps:
+                  - step:
+                      type: Run
+                      name: Build and Test App2
+                      identifier: build_test_app2
+                      spec:
+                        shell: Sh
+                        command: |
+                          cd monorepo-foo/app2-java-teamB
+                          mvn clean test jacoco:report
+                      resources:
+                        limits:
+                          memory: 512Mi
+                          cpu: "500m"
+        - stage:
+            name: App3 Java TeamB
+            identifier: app3_java_teamB
+            type: CI
+            spec:
+              cloneCodebase: true
+              execution:
+                steps:
+                  - step:
+                      type: Run
+                      name: Build and Test App3
+                      identifier: build_test_app3
+                      spec:
+                        shell: Sh
+                        command: |
+                          cd monorepo-foo/app3-java-teamB
+                          mvn clean test jacoco:report
+                      resources:
+                        limits:
+                          memory: 512Mi
+                          cpu: "500m"
+        - stage:
+            name: App4 Python TeamB
+            identifier: app4_python_teamB
+            type: CI
+            spec:
+              cloneCodebase: true
+              execution:
+                steps:
+                  - step:
+                      type: Run
+                      name: Build and Test App4
+                      identifier: build_test_app4
+                      spec:
+                        shell: Sh
+                        command: |
+                          cd monorepo-foo/app4-python-teamB
+                          pip install -r requirements.txt
+                          pytest --cov=. --cov-report=xml
+                      resources:
+                        limits:
+                          memory: 4Gi
+                          cpu: "3000m"

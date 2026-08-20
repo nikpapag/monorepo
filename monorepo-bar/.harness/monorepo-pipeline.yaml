@@ -1,0 +1,97 @@
+pipeline:
+  name: monorepo-bar-all-apps
+  identifier: monorepo_bar_all_apps
+  projectIdentifier: monorepo_bar
+  orgIdentifier: default
+  tags:
+    monorepo: bar
+    pipeline_type: custom
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.Github
+        repoName: monorepo
+        build: <+input>
+  stages:
+    - parallel:
+        - stage:
+            name: App5 Python TeamA Custom
+            identifier: app5_python_teamA_custom
+            type: CI
+            spec:
+              cloneCodebase: true
+              execution:
+                steps:
+                  - step:
+                      type: Run
+                      name: Custom Build App5
+                      identifier: custom_build_app5
+                      spec:
+                        shell: Sh
+                        command: |
+                          cd monorepo-bar/app5-python-teamA
+                          pip install --upgrade pip
+                          pip install -r requirements.txt
+                          pip install pylint
+                          pylint app.py --disable=C,R,W || true
+                          pytest --cov=. --cov-report=xml --junitxml=test-results.xml
+                          coverage report --fail-under=70
+                      resources:
+                        limits:
+                          memory: 512Mi
+                          cpu: "500m"
+        - stage:
+            name: App6 Java TeamB Custom
+            identifier: app6_java_teamB_custom
+            type: CI
+            spec:
+              cloneCodebase: true
+              execution:
+                steps:
+                  - step:
+                      type: Run
+                      name: Custom Build App6
+                      identifier: custom_build_app6
+                      spec:
+                        shell: Sh
+                        command: |
+                          cd monorepo-bar/app6-java-teamB
+                          mvn --version
+                          mvn clean compile
+                          mvn test
+                          mvn jacoco:report
+                          mvn jacoco:check -Drule.coverage.minimum=0.60
+                          mvn package -DskipTests
+                      resources:
+                        limits:
+                          memory: 512Mi
+                          cpu: "500m"
+        - stage:
+            name: App7 Java TeamA Custom
+            identifier: app7_java_teamA_custom
+            type: CI
+            spec:
+              cloneCodebase: true
+              execution:
+                steps:
+                  - step:
+                      type: Run
+                      name: Custom Build App7
+                      identifier: custom_build_app7
+                      spec:
+                        shell: Sh
+                        command: |
+                          cd monorepo-bar/app7-java-teamA
+                          mvn --version
+                          echo "Resource-intensive build starting"
+                          mvn clean compile -DskipTests
+                          mvn test -Dtest=*Test
+                          mvn jacoco:report
+                          mvn jacoco:check -Drule.coverage.minimum=0.65
+                          mvn package -DskipTests
+                          echo "Performance testing"
+                          mvn verify -DskipUTs
+                      resources:
+                        limits:
+                          memory: 2Gi
+                          cpu: "2000m"

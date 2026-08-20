@@ -1,0 +1,113 @@
+pipeline:
+  name: app7-java-teamA-custom
+  identifier: app7_java_teamA_custom
+  projectIdentifier: monorepo_bar
+  orgIdentifier: default
+  tags:
+    team: TeamA
+    language: java
+    resource_profile: large
+    pipeline_type: custom
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.Github
+        repoName: monorepo
+        build: <+input>
+  stages:
+    - stage:
+        name: Custom Build and Test
+        identifier: Custom_Build_Test
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Setup Environment
+                  identifier: setup_env
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app7-java-teamA
+                      mvn --version
+                      java --version
+                      echo "Setting up resource-intensive build environment"
+                  resources:
+                    limits:
+                      memory: 512Mi
+                      cpu: "500m"
+              - step:
+                  type: Run
+                  name: Clean and Compile
+                  identifier: compile
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app7-java-teamA
+                      mvn clean compile -DskipTests
+                  resources:
+                    limits:
+                      memory: 1Gi
+                      cpu: "1000m"
+              - step:
+                  type: Run
+                  name: Run Unit Tests
+                  identifier: unit_tests
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app7-java-teamA
+                      mvn test -Dtest=*Test
+                  resources:
+                    limits:
+                      memory: 2Gi
+                      cpu: "2000m"
+              - step:
+                  type: Run
+                  name: Generate Coverage Report
+                  identifier: coverage
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app7-java-teamA
+                      mvn jacoco:report
+                      mvn jacoco:check -Drule.coverage.minimum=0.65
+                  resources:
+                    limits:
+                      memory: 1Gi
+                      cpu: "1000m"
+              - step:
+                  type: Run
+                  name: Package Application
+                  identifier: package
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app7-java-teamA
+                      mvn package -DskipTests
+                  resources:
+                    limits:
+                      memory: 1Gi
+                      cpu: "1000m"
+              - step:
+                  type: Run
+                  name: Performance Test
+                  identifier: perf_test
+                  spec:
+                    shell: Sh
+                    command: |
+                      cd monorepo-bar/app7-java-teamA
+                      echo "Running performance tests on resource-intensive operations"
+                      mvn verify -DskipUTs
+                  resources:
+                    limits:
+                      memory: 2Gi
+                      cpu: "2000m"
