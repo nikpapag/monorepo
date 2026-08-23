@@ -1,74 +1,66 @@
-pipeline:
-  name: Build
-  identifier: Build
-  projectIdentifier: devx_ai_1
-  orgIdentifier: sandbox
-  tags: {}
-  properties:
-    ci:
-      codebase:
-        connectorRef: gh_app2
-        repoName: monorepo
-        build: <+input>
-  stages:
-    - stage:
-        name: Build
-        identifier: Build
-        description: ""
-        type: CI
-        spec:
-          cloneCodebase: true
-          caching:
-            enabled: true
-            override: false
-          buildIntelligence:
-            enabled: true
-          platform:
-            os: Linux
-            arch: Amd64
-          runtime:
-            type: Cloud
-            spec: {}
-          execution:
-            steps:
-              - step:
-                  type: Run
-                  name: Run_1
-                  identifier: Run_1
+                  type: ShellScript
+                  name: Generate Pipeline YAML
+                  identifier: generate_pipeline_yaml
+                  timeout: 10m
                   spec:
-                    shell: Sh
-                    command: |-
-                      echo "PRE-FLIGHT GOVERNANCE CHECK"
+                    shell: Bash
+                    onDelegate: true
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          cat > /tmp/dynamic-pipeline.yaml <<'EOF'
+                          pipeline:
+                            name: Generated Pipeline
+                            identifier: generated_pipeline
+                            projectIdentifier: my_project
+                            orgIdentifier: default
 
-                      APP_PATH=<+pipeline.variables.app_path>
-                      echo "App Path: $APP_PATH"
+                            stages:
+                              - stage:
+                                  name: Build Service A
+                                  identifier: build_service_a
+                                  type: Custom
+                                  spec:
+                                    execution:
+                                      steps:
+                                        - step:
+                                            type: ShellScript
+                                            name: Build
+                                            identifier: build
+                                            timeout: 10m
+                                            spec:
+                                              shell: Bash
+                                              onDelegate: true
+                                              source:
+                                                type: Inline
+                                                spec:
+                                                  script: |
+                                                    echo "Building Service A..."
+                                                    echo "Running unit tests..."
+                                              environmentVariables: []
+                                              outputVariables: []
 
-                      MONOREPO=$(echo "$APP_PATH" | cut -d'/' -f1)
-                      APP_NAME=$(echo "$APP_PåATH" | cut -d'/' -f2)
-                      LANGUAGE=$(echo "$APP_NAME" | cut -d'-' -f2)
-                      TEAM=$(echo "$APP_NAME" | cut -d'-' -f3)
-
-                      APP_NUM=$(echo "$APP_NAME" | sed 's/app\([0-9]\).*/\1/')
-                      case "$APP_NUM" in
-                        1|4|7) BUILD_SIZE="large" ;;
-                        *) BUILD_SIZE="small" ;;
-                      esac
-
-                      if [ "$MONOREPO" = "monorepo-foo" ]; then
-                        COVERAGE="80"
-                        PIPELINE_TYPE="Guild-recommended"
-                      else
-                        COVERAGE="70"
-                        PIPELINE_TYPE="Custom"
-                      fi
-
-                      echo "Parsed: $MONOREPO / $APP_NAME"
-                      echo "Language: $LANGUAGE | Team: $TEAM | Size: $BUILD_SIZE"
-                      echo "Coverage: $COVERAGE% | Type: $PIPELINE_TYPE"
-                      echo "Pre-flight checks completed"
-  variables:
-    - name: app_path
-      type: String
-      description: ""
-      required: false
-      value: <+input>.default(monorepo-foo/app1-python-teamA)
+                              - stage:
+                                  name: Build Service B
+                                  identifier: build_service_b
+                                  type: Custom
+                                  spec:
+                                    execution:
+                                      steps:
+                                        - step:
+                                            type: ShellScript
+                                            name: Build
+                                            identifier: build
+                                            timeout: 10m
+                                            spec:
+                                              shell: Bash
+                                              onDelegate: true
+                                              source:
+                                                type: Inline
+                                                spec:
+                                                  script: |
+                                                    echo "Building Service B..."
+                                                    echo "Running unit tests..."
+                                              environmentVariables: []
+                                              outputVariables: []
