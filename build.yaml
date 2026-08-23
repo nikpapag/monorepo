@@ -1,6 +1,21 @@
+pipeline:
+  name: Generated Pipeline
+  identifier: generated_pipeline
+  projectIdentifier: my_project
+  orgIdentifier: default
+
+  stages:
+    - stage:
+        name: Build Service A
+        identifier: build_service_a
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
                   type: ShellScript
-                  name: Generate Pipeline YAML
-                  identifier: generate_pipeline_yaml
+                  name: Build
+                  identifier: build
                   timeout: 10m
                   spec:
                     shell: Bash
@@ -9,58 +24,31 @@
                       type: Inline
                       spec:
                         script: |
-                          cat > /tmp/dynamic-pipeline.yaml <<'EOF'
-                          pipeline:
-                            name: Generated Pipeline
-                            identifier: generated_pipeline
-                            projectIdentifier: my_project
-                            orgIdentifier: default
+                          echo "Building Service A..."
+                          echo "Running unit tests..."
+                    environmentVariables: []
+                    outputVariables: []
 
-                            stages:
-                              - stage:
-                                  name: Build Service A
-                                  identifier: build_service_a
-                                  type: Custom
-                                  spec:
-                                    execution:
-                                      steps:
-                                        - step:
-                                            type: ShellScript
-                                            name: Build
-                                            identifier: build
-                                            timeout: 10m
-                                            spec:
-                                              shell: Bash
-                                              onDelegate: true
-                                              source:
-                                                type: Inline
-                                                spec:
-                                                  script: |
-                                                    echo "Building Service A..."
-                                                    echo "Running unit tests..."
-                                              environmentVariables: []
-                                              outputVariables: []
-
-                              - stage:
-                                  name: Build Service B
-                                  identifier: build_service_b
-                                  type: Custom
-                                  spec:
-                                    execution:
-                                      steps:
-                                        - step:
-                                            type: ShellScript
-                                            name: Build
-                                            identifier: build
-                                            timeout: 10m
-                                            spec:
-                                              shell: Bash
-                                              onDelegate: true
-                                              source:
-                                                type: Inline
-                                                spec:
-                                                  script: |
-                                                    echo "Building Service B..."
-                                                    echo "Running unit tests..."
-                                              environmentVariables: []
-                                              outputVariables: []
+    - stage:
+        name: Build Service B
+        identifier: build_service_b
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: ShellScript
+                  name: Build
+                  identifier: build
+                  timeout: 10m
+                  spec:
+                    shell: Bash
+                    onDelegate: true
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          echo "Building Service B..."
+                          echo "Running unit tests..."
+                    environmentVariables: []
+                    outputVariables: []
