@@ -1,0 +1,40 @@
+# Python Test Step - Clean and Simple
+# Drop this into your pipeline's execution.steps section
+
+- step:
+    type: Run
+    name: Run Tests with Coverage
+    identifier: run_tests_coverage
+    spec:
+      shell: Sh
+      command: |
+        cd monorepo-foo/app1-python-teamA
+
+        # Install dependencies
+        pip install -q -r requirements.txt pytest pytest-cov coverage
+
+        # Run tests with coverage
+        pytest -v \
+          --cov=. \
+          --cov-report=xml:coverage.xml \
+          --cov-report=term-missing \
+          --junitxml=test-results.xml
+
+        # Generate LCOV for Harness
+        coverage lcov -o lcov.info
+
+        # Show coverage summary
+        coverage report
+
+        # Upload coverage (NOT test results)
+        hcli cov upload --file=lcov.info
+        hcli cov wait-until --gt=70 --patch-gt=80 --timeout=1m
+      reports:
+        type: JUnit
+        spec:
+          paths:
+            - "monorepo-foo/app1-python-teamA/test-results.xml"
+    resources:
+      limits:
+        memory: 2Gi
+        cpu: "1000m"
