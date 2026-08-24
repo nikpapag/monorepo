@@ -1,0 +1,30 @@
+# Java Test Step - Clean and Simple
+# Drop this into your pipeline's execution.steps section
+
+- step:
+    type: Run
+    name: Run Tests with Coverage
+    identifier: run_tests_coverage
+    spec:
+      shell: Sh
+      command: |
+        cd monorepo-foo/app2-java-teamB
+
+        # Clean, compile, test with coverage
+        mvn clean test jacoco:report
+
+        # Show test summary
+        echo "Tests completed. Results in target/surefire-reports/"
+
+        # Upload coverage (NOT test results)
+        hcli cov upload --file=target/site/jacoco/jacoco.xml --format=jacoco
+        hcli cov wait-until --gt=60 --patch-gt=70 --timeout=1m
+      reports:
+        type: JUnit
+        spec:
+          paths:
+            - "monorepo-foo/app2-java-teamB/target/surefire-reports/*.xml"
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: "1000m"

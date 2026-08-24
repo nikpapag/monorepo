@@ -53,7 +53,10 @@ hs_err_pid*
 *~
 .DS_Store
 
-# Test and Coverage
+# Test and Coverage (be specific, don't ignore pom.xml!)
 coverage.xml
 test-results.xml
-*.xml
+lcov.info
+**/target/surefire-reports/*.xml
+**/target/site/jacoco/*.xml
+htmlcov/

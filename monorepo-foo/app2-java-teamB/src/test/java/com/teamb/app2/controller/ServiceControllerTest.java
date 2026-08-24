@@ -42,7 +42,8 @@ public class ServiceControllerTest {
                 .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("success"))
-                .andExpect(jsonPath("$.data.processed").value("HELLO WORLD"));
+                .andExpect(jsonPath("$.data.processed").value("HELLO WORLD"))
+                .andExpect(jsonPath("$.data.original").value("hello world"));
     }
 
     @Test
@@ -53,7 +54,8 @@ public class ServiceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sum").value(8))
                 .andExpect(jsonPath("$.product").value(15))
-                .andExpect(jsonPath("$.difference").value(2));
+                .andExpect(jsonPath("$.difference").value(2))
+                .andExpect(jsonPath("$.quotient").value(1.6666666666666667));
     }
 
     @Test
