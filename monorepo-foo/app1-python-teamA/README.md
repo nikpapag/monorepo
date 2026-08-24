@@ -22,7 +22,19 @@ TeamA
 - `GET /` - Service information
 - `GET /health` - Health check
 - `POST /train` - Train ML model (resource intensive)
+- `POST /predict` - Make predictions using trained model
+- `GET /model/info` - Get current model information
 - `POST /process` - Process large datasets
+
+### Prediction Workflow
+1. Train the model: `POST /train`
+2. Check model status: `GET /model/info`
+3. Make predictions: `POST /predict` with JSON body:
+   ```json
+   {
+     "features": [0.1, 0.2, ..., 0.9]  // Array of 20 float values
+   }
+   ```
 
 ## Running Locally
 ```bash
