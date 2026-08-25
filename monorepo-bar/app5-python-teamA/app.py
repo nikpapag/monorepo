@@ -23,8 +23,8 @@ def health():
 def greet():
     data = request.get_json()
 
-    # Validate input
-    if not data:
+    # Validate input (None means no JSON body, {} is valid)
+    if data is None:
         return jsonify({
             'error': 'Request body is required',
             'code': 'MISSING_BODY'
