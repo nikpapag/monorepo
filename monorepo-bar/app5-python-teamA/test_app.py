@@ -45,4 +45,20 @@ def test_status(client):
     data = json.loads(response.data)
     assert data['service'] == 'app5-python-teamA'
     assert 'endpoints' in data
-    assert len(data['endpoints']) == 4
+    assert len(data['endpoints']) == 5
+
+def test_logs_endpoint(client):
+    # Make some requests first
+    client.get('/')
+    client.get('/health')
+
+    # Check logs
+    response = client.get('/api/logs')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+
+    assert data['service'] == 'app5-python-teamA'
+    assert 'total_requests' in data
+    assert 'logs' in data
+    assert data['total_requests'] > 0
+    assert len(data['logs']) > 0
