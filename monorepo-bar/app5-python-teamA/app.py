@@ -22,10 +22,34 @@ def health():
 @app.route('/api/greet', methods=['POST'])
 def greet():
     data = request.get_json()
+
+    # Validate input
+    if not data:
+        return jsonify({
+            'error': 'Request body is required',
+            'code': 'MISSING_BODY'
+        }), 400
+
     name = data.get('name', 'Guest')
+
+    # Validate name length
+    if len(name) > 100:
+        return jsonify({
+            'error': 'Name too long (max 100 characters)',
+            'code': 'NAME_TOO_LONG'
+        }), 400
+
+    # Validate name characters
+    if not name.replace(' ', '').isalnum():
+        return jsonify({
+            'error': 'Name can only contain letters, numbers, and spaces',
+            'code': 'INVALID_NAME'
+        }), 400
+
     return jsonify({
         'message': f'Hello, {name}!',
-        'timestamp': time.time()
+        'timestamp': time.time(),
+        'validated': True
     }), 200
 
 @app.route('/api/status')
@@ -33,12 +57,19 @@ def status():
     return jsonify({
         'service': 'app5-python-teamA',
         'uptime': 'healthy',
+        'features': ['input-validation'],
         'endpoints': [
             'GET /',
             'GET /health',
             'POST /api/greet',
             'GET /api/status'
-        ]
+        ],
+        'validation_rules': {
+            'name': {
+                'max_length': 100,
+                'allowed_chars': 'alphanumeric and spaces'
+            }
+        }
     }), 200
 
 if __name__ == '__main__':
