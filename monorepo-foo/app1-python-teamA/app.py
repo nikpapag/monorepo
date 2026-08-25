@@ -4,8 +4,20 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import os
+import time
+from datetime import datetime
 
 app = Flask(__name__)
+
+# Application metrics
+app_metrics = {
+    'request_count': 0,
+    'train_count': 0,
+    'process_count': 0,
+    'error_count': 0,
+    'total_processing_time': 0.0,
+    'start_time': datetime.utcnow().isoformat()
+}
 
 # Simulated ML model training (resource-intensive operation)
 def train_model():
@@ -24,6 +36,7 @@ def train_model():
 
 @app.route('/')
 def home():
+    app_metrics['request_count'] += 1
     return jsonify({
         'service': 'app1-python-teamA',
         'team': 'TeamA',
@@ -39,14 +52,21 @@ def health():
 @app.route('/train', methods=['POST'])
 def train():
     """Resource-intensive ML training endpoint"""
+    app_metrics['request_count'] += 1
+    start = time.time()
     try:
+        app_metrics['train_count'] += 1
         accuracy = train_model()
+        elapsed = time.time() - start
+        app_metrics['total_processing_time'] += elapsed
         return jsonify({
             'status': 'success',
             'accuracy': accuracy,
+            'processing_time': elapsed,
             'message': 'Model trained successfully'
         }), 200
     except Exception as e:
+        app_metrics['error_count'] += 1
         return jsonify({
             'status': 'error',
             'message': str(e)
@@ -55,18 +75,54 @@ def train():
 @app.route('/process', methods=['POST'])
 def process_data():
     """Process data - resource intensive"""
+    app_metrics['request_count'] += 1
+    app_metrics['process_count'] += 1
+    start = time.time()
+
     data = request.get_json()
     size = data.get('size', 1000)
 
     # Generate and process large dataset
     df = pd.DataFrame(np.random.randn(size, 10))
+    elapsed = time.time() - start
+    app_metrics['total_processing_time'] += elapsed
+
     result = {
         'mean': df.mean().tolist(),
         'std': df.std().tolist(),
-        'shape': df.shape
+        'shape': df.shape,
+        'processing_time': elapsed
     }
 
     return jsonify(result), 200
+
+@app.route('/metrics')
+def metrics():
+    """Application metrics endpoint"""
+    uptime_seconds = (datetime.utcnow() - datetime.fromisoformat(app_metrics['start_time'])).total_seconds()
+
+    return jsonify({
+        'service': 'app1-python-teamA',
+        'metrics': {
+            'requests': {
+                'total': app_metrics['request_count'],
+                'train': app_metrics['train_count'],
+                'process': app_metrics['process_count'],
+                'errors': app_metrics['error_count']
+            },
+            'performance': {
+                'total_processing_time_seconds': round(app_metrics['total_processing_time'], 2),
+                'avg_processing_time_seconds': round(
+                    app_metrics['total_processing_time'] / max(app_metrics['train_count'] + app_metrics['process_count'], 1),
+                    2
+                )
+            },
+            'uptime': {
+                'start_time': app_metrics['start_time'],
+                'uptime_seconds': round(uptime_seconds, 2)
+            }
+        }
+    }), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

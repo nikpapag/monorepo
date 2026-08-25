@@ -52,3 +52,21 @@ def test_process_data_default_size(client):
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['shape'] == [1000, 10]
+
+def test_metrics_endpoint(client):
+    """Test metrics endpoint"""
+    # Make some requests first
+    client.get('/')
+    client.post('/train')
+
+    # Check metrics
+    response = client.get('/metrics')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+
+    assert data['service'] == 'app1-python-teamA'
+    assert 'metrics' in data
+    assert 'requests' in data['metrics']
+    assert 'performance' in data['metrics']
+    assert 'uptime' in data['metrics']
+    assert data['metrics']['requests']['total'] > 0
