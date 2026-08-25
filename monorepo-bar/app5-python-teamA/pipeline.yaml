@@ -1,0 +1,212 @@
+pipeline:
+  name: Picnic Demo
+  identifier: Picnic_Demo
+  projectIdentifier: devx_ai_1
+  orgIdentifier: sandbox
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: github
+        repoName: monorepo
+        build: <+input>
+  stages:
+    - stage:
+        name: Build_Paths
+        identifier: Build_Paths
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: false
+          buildIntelligence:
+            enabled: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Gitleaks
+                  name: Gitleaks
+                  identifier: Gitleaks
+                  spec:
+                    mode: orchestration
+                    config: default
+                    target:
+                      type: repository
+                      detection: auto
+                    advanced:
+                      log:
+                        level: info
+              - parallel:
+                  - step:
+                      type: Test
+                      name: Python Test
+                      identifier: Python_Test
+                      spec:
+                        shell: Sh
+                        command: |+
+
+                          cd <+pipeline.stages.Build.spec.execution.steps.detect_pr_changes.output.outputVariables.APP_PATH>
+                          # Install dependencies
+                          pip install -q -r requirements.txt pytest pytest-cov coverage
+
+                          export PYTHONPATH="${PWD}:${PYTHONPATH}"
+                          # Run tests with coverage
+                          pytest -v \
+                            --cov=app \
+                            --cov=. \
+                            --cov-report=xml:coverage.xml \
+                            --cov-report=term-missing \
+                            --junitxml=test-results.xml
+                          # Generate LCOV for Harness
+                          coverage lcov -o lcov.info
+                          coverage report
+
+                          # Upload to Harness
+                          echo ""
+                          echo "Uploading to Harness..."
+                          hcli cov upload --file=lcov.info ||  echo "Coverage upload skipped"
+                          hcli cov wait-until --gt=70 --patch-gt=80 --timeout=1m || echo "Quality gate check skipped"
+
+
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - /harness/<+pipeline.stages.Build.spec.execution.steps.detect_pr_changes.output.outputVariables.APP_PATH>/**/.*.xml
+                        envVariables:
+                          CI_ENABLE_HCLI_FOR_TESTS: "true"
+                        intelligenceMode: true
+                      when:
+                        stageStatus: Success
+              - parallel:
+                  - step:
+                      type: Owasp
+                      name: OWASP
+                      identifier: OWASP
+                      spec:
+                        mode: orchestration
+                        config: default
+                        target:
+                          type: repository
+                          workspace: /harness/<+pipeline.stages.Build.spec.execution.steps.detect_pr_changes.output.outputVariables.APP_PATH>
+                          detection: auto
+                        advanced:
+                          log:
+                            level: info
+                  - step:
+                      type: Semgrep
+                      name: Semgrep
+                      identifier: Semgrep
+                      spec:
+                        mode: orchestration
+                        config: default
+                        target:
+                          type: repository
+                          workspace: /harness/<+pipeline.stages.Build.spec.execution.steps.detect_pr_changes.output.outputVariables.APP_PATH>
+                          detection: auto
+                        advanced:
+                          log:
+                            level: info
+              - step:
+                  type: BuildAndPushDockerRegistry
+                  name: BuildAndPushDockerRegistry_1
+                  identifier: BuildAndPushDockerRegistry_1
+                  spec:
+                    repo: <+pipeline.stages.Build.spec.execution.steps.detect_pr_changes.output.outputVariables.APP_PATH>.toLowerCase()>
+                    tags:
+                      - <+pipeline.sequenceId>
+                    caching: true
+                    dockerfile: <+pipeline.stages.Build.spec.execution.steps.detect_pr_changes.output.outputVariables.APP_PATH>/Dockerfile
+                    context: <+pipeline.stages.Build.spec.execution.steps.detect_pr_changes.output.outputVariables.APP_PATH>
+                    registryRef: picnic_demo
+              - parallel:
+                  - step:
+                      type: SscaOrchestration
+                      name: SBOM Orchestration_1
+                      identifier: SBOMOrchestration_1
+                      spec:
+                        mode: generation
+                        tool:
+                          type: Syft
+                          spec:
+                            format: spdx-json
+                        source:
+                          type: har
+                          spec:
+                            registry: picnic_demo
+                            image: <+<+pipeline.stages.Build.spec.execution.steps.detect_pr_changes.output.outputVariables.APP_PATH>.toLowerCase()>:<+pipeline.sequenceId>
+                        attestation:
+                          type: keyless
+                          spec:
+                            oidcProvider: harness
+                        sbom_drift:
+                          base: last_generated_sbom
+                        resources:
+                          limits:
+                            memory: 500Mi
+                            cpu: "0.5"
+                  - step:
+                      type: Background
+                      name: dind
+                      identifier: dind
+                      spec:
+                        connectorRef: account.harnessImage
+                        image: docker:dind
+                        shell: Sh
+                  - step:
+                      type: AquaTrivy
+                      name: AquaTrivy_1
+                      identifier: AquaTrivy_1
+                      spec:
+                        target:
+                          detection: auto
+                          type: container
+                        advanced:
+                          log:
+                            level: info
+                          args: {}
+                        privileged: true
+                        mode: orchestration
+                        config: default
+                        image:
+                          type: harness
+                          name: ""
+                          tag: latest
+                          registry: picnic_demo
+                          image_path: <+<+pipeline.stages.Build.spec.execution.steps.detect_pr_changes.output.outputVariables.APP_PATH>.toLowerCase()>:<+pipeline.sequenceId>
+              - step:
+                  type: Agent
+                  name: Agent
+                  identifier: Agent
+                  spec:
+                    agentName: ca_pr_annotation_agent
+                    agentSettings:
+                      llmConnector: account.harnessAnthropic
+                      mcpConnectors:
+                        - GitHub_MCP_Server
+                        - Harness_MCP_server
+                      modelName: claude-sonnet-4-6
+                      prUrl: <+codebase.pullRequestLink>
+                    envVariables:
+                      HARNESS_ACCOUNT_ID: <+account.identifier>
+                      HARNESS_ORG_ID: <+org.identifier>
+                      HARNESS_PROJECT_ID: <+project.identifier>
+                      HARNESS_PIPELINE_ID: <+pipeline.identifier>
+                      HARNESS_EXECUTION_ID: <+pipeline.executionId>
+                  when:
+                    stageStatus: All
+          sharedPaths:
+            - /var/run
+        when:
+          pipelineStatus: Success
+        sendGitStatus:
+          enabled: true
+          name: "Harness CI "
