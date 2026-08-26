@@ -2,6 +2,8 @@ package com.teamb.app2.controller;
 
 import com.teamb.app2.model.ServiceInfo;
 import com.teamb.app2.model.ApiResponse;
+import com.teamb.app2.service.MetricsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +18,12 @@ public class ServiceController {
     @Value("${app.version:1.0.0}")
     private String appVersion;
 
+    @Autowired
+    private MetricsService metricsService;
+
     @GetMapping("/")
     public ResponseEntity<ServiceInfo> getServiceInfo() {
+        metricsService.incrementRequestCount();
         ServiceInfo info = new ServiceInfo(
             "app2-java-teamB",
             "TeamB",
@@ -37,6 +43,9 @@ public class ServiceController {
 
     @PostMapping("/process")
     public ResponseEntity<ApiResponse> processData(@RequestBody Map<String, Object> request) {
+        metricsService.incrementRequestCount();
+        metricsService.incrementProcessCount();
+
         String input = (String) request.getOrDefault("input", "");
         String processed = input.toUpperCase();
 
@@ -52,6 +61,9 @@ public class ServiceController {
     public ResponseEntity<Map<String, Object>> calculate(
             @RequestParam(defaultValue = "10") int a,
             @RequestParam(defaultValue = "20") int b) {
+
+        metricsService.incrementRequestCount();
+        metricsService.incrementCalculateCount();
 
         Map<String, Object> result = new HashMap<>();
         result.put("a", a);
